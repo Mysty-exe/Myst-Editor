@@ -1,62 +1,128 @@
-# Myst Text Editor
+# Terminal Text Editor (Myst)
 
-Myst is a lightweight, customizable, and terminal-based text editor made for linux. Features a variety of themes, keyboard shortcuts, and support for user preferences, Myst is ideal for programmers and writers who work in terminal environments.
+A terminal based text editor built with C++ and ncurses.  
+The editor focuses on fast keyboard driven editing, customizable themes, and lightweight performance in terminal environments.
 
-## Features
+## Overview
 
-- Customizable Themes: Choose from a range of themes like "Arctic Horizon," "Twilight Cascade," and more.
-- Syntax Highlighting **(CURRENTLY ONLY FOR PYTHON FILES)**: Token-based coloring for strings, keywords, comments, and more.
-- Keyboard Shortcuts: Quick navigation and editing with intuitive shortcuts.
-- Configurable Settings
-- Save and "Save As" options
-- Seamless file switching
+Myst is designed for efficient text editing directly in the terminal.  
+It handles user input, rendering, and file operations without relying on external editors, with a focus on responsiveness and control.
 
-## Installation
+## Core Features
 
-    git clone https://github.com/Mysty-exe/Myst.git
-    make run
+- Keyboard driven editing workflow
+- Syntax highlighting for Python
+- Theme system with configurable color schemes
+- Multi file navigation and switching
+- Save and Save As functionality
+- Configurable user preferences
+- Lightweight and fast execution
 
-## Dependencies
+## Demo
 
-- g++ or any C++17-compatible compiler
-- make
+## Technical Details
+
+### Input System
+
+- Uses ncurses for raw keyboard input handling
+- Processes key events for navigation and editing commands
+- Uses custom keybindings and shortcuts
+
+### Text Buffer
+
+- Manages text using a structured in memory buffer
+- Handles insertion, deletion, and navigation efficiently
+- Maintains cursor position and viewport state
+
+### Rendering
+
+- Uses ncurses for terminal rendering
+- Redraws only necessary regions for performance
+- Applies syntax highlighting during render pass
+
+### Syntax Highlighting
+
+- Token based parsing for Python files
+- Identifies keywords, strings, and comments
+- Applies color mapping based on theme configuration
+
+### Configuration
+
+- Reads user preferences from configuration files
+- Supports theme switching and editor behavior customization
+- Applies settings at startup
+
+## Requirements
+
+- C++17 compatible compiler
 - ncurses
+- make
 - xclip
 
-## Usage
+## Build
 
-Running Myst:
+Clone the repository:
 
-- Run `myst.exe` in your Linux terminal, or using wsl in Windows.
-- You can also provide a file name  : `myst.exe [filename.txt]`.
+```
+git clone https://github.com/Mysty-exe/Myst.git
+cd Myst
+```
 
-Key Shortcuts:
+Build and run:
 
-- Ctrl-S - Save
-- Ctrl-F - Find/Replace
-- Ctrl-E - Settings/Menu
-- Ctrl-P - Preferences
-- Ctrl-B - Previous File
-- Ctrl-N - Next File
-- Ctrl-Q - Quit
+```
+make all
+```
 
-## Configuration and Preferences:
+## Run
 
-Edit settings.ini in the /config/ directory to customize your preferences.
-Myst will automatically apply changes on the next startup.
+```
+./build/myst.exe
+```
 
-## Known Issues
+Open a file:
 
-- Terminal Compatibility: Some shortcuts may not work on certain terminals. Ensure your terminal supports ncurses properly.
-- File Paths: Relative paths may cause issues if Myst is run outside its main directory. Ensure the resources/ folder is in the correct location.
+```
+./build/myst.exe filename.txt
+```
 
-## Screenshots
+## Controls
 
-- [Myst Logo](resources/screenshots/Logo.png)
-- [Example Python Code](resources/screenshots/Code.png)
-- [List of Files To Switch](resources/screenshots/Files.png)
-- [Settings](resources/screenshots/Settings.png)
+General
 
-## Contact
+- Ctrl Q: quit
+- Ctrl S: save
+- Ctrl E: open menu
+- Ctrl P: preferences
 
-For issues or questions, please open an issue on GitHub or contact me directly at o.s.toure72@gmail.com.
+Navigation
+
+- Ctrl B: previous file
+- Ctrl N: next file
+
+Editing
+
+- Ctrl F: find and replace
+
+## Project Structure
+
+```
+src/ core    editor logic
+include/     headers
+config/      user settings
+resources/   themes and assets
+build/       generated files
+```
+
+## Future Work
+
+- Support for more programming languages
+- Improved syntax parsing system
+- More efficient text buffer structure
+- Plugin system for extensions
+- Mouse support
+
+## Notes
+
+- Designed for Linux terminal environments
+- Requires proper ncurses support
