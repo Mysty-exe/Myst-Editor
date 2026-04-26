@@ -18,7 +18,12 @@ It handles user input, rendering, and file operations without relying on externa
 - Configurable user preferences
 - Lightweight and fast execution
 
-## Demo
+## Screenshots
+
+![Logo](resources/screenshots/Logo.png)
+![Code](resources/screenshots/Code.png)
+![Files](resources/screenshots/Files.png)
+![Settings](resources/screenshots/Settings.png)
 
 ## Technical Details
 
@@ -107,7 +112,7 @@ Editing
 ## Project Structure
 
 ```
-src/ core    editor logic
+src/         core editor logic
 include/     headers
 config/      user settings
 resources/   themes and assets
