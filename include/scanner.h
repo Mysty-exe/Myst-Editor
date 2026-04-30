@@ -9,7 +9,7 @@ enum Language
 {
     PYTHON = 1,
     CPP = 2,
-    C = 3
+    NONE = 3
 };
 
 enum Token
@@ -45,6 +45,7 @@ private:
     vector<string> singleOperators;
     vector<string> doubleOperators;
     vector<string> keyWords;
+    vector<string> specialWords;
     vector<string> specialChars;
     vector<string> functions;
     Language currentLang;
@@ -58,4 +59,5 @@ public:
     void setDocString(bool doc);
     vector<string> getLexemes(string code);
     vector<pair<string, Token>> getTokens(string code);
+    Language getLanguage() { return currentLang; };
 };

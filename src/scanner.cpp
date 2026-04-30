@@ -4,6 +4,7 @@ LexerScanner::LexerScanner()
 {
     setLexers();
     docString = false;
+    currentLang = NONE;
 }
 
 void LexerScanner::setLexers()
@@ -26,6 +27,26 @@ void LexerScanner::setLexers()
                      "round", "set", "setattr", "slice", "sorted", "staticmethod", "str", "sum",
                      "super", "tuple", "type", "vars", "zip", "__import__"};
     }
+
+    if (currentLang == CPP)
+    {
+        punctuation = {",", ";", ".", ":"};
+        delimiters = {"(", ")", "[", "]", "{", "}"};
+        singleOperators = {"=", ">", "<", "+", "-", "*", "/", "%", "&", "|", "!", "^", "~", "?"};
+        doubleOperators = {"==", "<=", ">=", "+=", "-=", "*=", "/=", "!=", "->", ".*", "::", ">>", "<<"};
+        specialChars = {R"(\n)", R"(\t)", R"(\r)", R"(\e)", R"(\a)", R"(\f)", R"(\v)", R"(\b)", R"(\')", R"(\")", R"(\\)"};
+        specialWords = {"#include", "#define", "#undef", "#if", "#ifdef", "#ifndef",
+                        "#elif", "#else", "#endif", "#pragma", "#error", "#line"};
+        keyWords = {"bool", "int", "float", "double", "long", "char", "void", "if",
+                    "else", "switch", "case", "for", "while", "do",
+                    "return", "break", "continue", "class", "struct",
+                    "enum", "union", "public", "private", "protected",
+                    "virtual", "override", "final", "template",
+                    "typename", "constexpr", "const", "static",
+                    "namespace", "using", "new", "delete", "try",
+                    "catch", "throw", "inline", "auto", "decltype"};
+        functions = {"main"};
+    }
 }
 
 void LexerScanner::setLanguage(Language language)
@@ -45,7 +66,11 @@ Returns:
  */
 
 {
+    if (txt.compare(0, 2, "0x") == 0 && txt.size() > 2 && txt.find_first_not_of("0123456789abcdefABCDEF", 2) == std::string::npos)
+        return true;
+
     int decimal = 0;
+    int exponent = 0;
     for (int x = 0; x < (int)txt.length(); x++)
     {
         if (txt[x] == '.')
@@ -54,12 +79,13 @@ Returns:
         }
         else if (!isdigit(txt[x]))
         {
-            return false;
+            if ((txt[x] == 'e' || txt[x] == 'E') && x != 0)
+                exponent++;
+            else
+                return false;
         }
-        if (decimal > 1)
-        {
+        if (decimal > 1 || exponent > 1)
             return false;
-        }
     }
     return true;
 }
@@ -95,19 +121,122 @@ Returns:
     bool startString = false;
     bool comment = false;
 
+    if (!docString)
+    {
+        for (std::string specialWord : specialWords)
+        {
+            if (code.starts_with(specialWord))
+            {
+                lexemes.push_back(code);
+                return lexemes;
+            }
+        }
+    }
+
     for (int x = 0; x < (int)code.length(); x++)
     {
-        if (code.substr(i, 3) == "\"\"\"" || code.substr(i, 3) == "'''")
+        if (currentLang == PYTHON)
         {
-            docString = not docString;
-            if (currentLexeme != "")
+            if ((code.substr(i, 3) == "\"\"\"" || code.substr(i, 3) == "'''"))
             {
-                lexemes.push_back(currentLexeme);
-                currentLexeme = "";
+                docString = not docString;
+                if (!docString)
+                    currentLexeme += code.substr(i, 3);
+                if (currentLexeme != "")
+                {
+                    lexemes.push_back(currentLexeme);
+                    currentLexeme = "";
+                }
+                if (docString)
+                    currentLexeme += code.substr(i, 3);
+                i += 3;
+
+                if (i == (int)code.length())
+                {
+                    if (currentLexeme != "")
+                    {
+                        lexemes.push_back(currentLexeme);
+                    }
+                    break;
+                }
+                continue;
             }
-            currentLexeme += code[i];
+            else if (code.substr(i, 1) == "#" && !docString)
+            {
+                comment = true;
+                if (currentLexeme != "")
+                {
+                    lexemes.push_back(currentLexeme);
+                    currentLexeme = "";
+                }
+                currentLexeme += code[i];
+                i++;
+
+                if (i == (int)code.length())
+                {
+                    if (currentLexeme != "")
+                    {
+                        lexemes.push_back(currentLexeme);
+                    }
+                    break;
+                }
+                continue;
+            }
         }
-        else if ((code.substr(i, 1) == "\"" || code.substr(i, 1) == "'") && !comment)
+        else if (currentLang == CPP)
+        {
+            if ((code.substr(i, 2) == "/*"))
+                docString = true;
+            if ((code.substr(i, 2) == "*/"))
+                docString = false;
+
+            if ((code.substr(i, 2) == "/*") || (code.substr(i, 2) == "*/"))
+            {
+                if (!docString)
+                    currentLexeme += code.substr(i, 2);
+                if (currentLexeme != "")
+                {
+                    lexemes.push_back(currentLexeme);
+                    currentLexeme = "";
+                }
+                if (docString)
+                    currentLexeme += code.substr(i, 2);
+                i += 2;
+
+                if (i == (int)code.length())
+                {
+                    if (currentLexeme != "")
+                    {
+                        lexemes.push_back(currentLexeme);
+                    }
+                    break;
+                }
+                continue;
+            }
+            else if (code.substr(i, 2) == "//" && !docString)
+            {
+                comment = true;
+                if (currentLexeme != "")
+                {
+                    lexemes.push_back(currentLexeme);
+                    currentLexeme = "";
+                }
+                currentLexeme += code[i];
+                i++;
+
+                if (i == (int)code.length())
+                {
+                    if (currentLexeme != "")
+                    {
+                        lexemes.push_back(currentLexeme);
+                    }
+                    break;
+                }
+                continue;
+            }
+        }
+
+        if ((code.substr(i, 1) == "\"" || code.substr(i, 1) == "'") && !comment && !docString)
         {
             if (!startString)
             {
@@ -127,19 +256,8 @@ Returns:
                 startString = false;
             }
         }
-
         else if (startString || comment || docString)
         {
-            currentLexeme += code[i];
-        }
-        else if (code.substr(i, 1) == "#")
-        {
-            comment = true;
-            if (currentLexeme != "")
-            {
-                lexemes.push_back(currentLexeme);
-                currentLexeme = "";
-            }
             currentLexeme += code[i];
         }
         else if ((find(delimiters.begin(), delimiters.end(), code.substr(i, 1)) != delimiters.end() || code.substr(i, 1) == ",") && !startString && !comment)
@@ -231,12 +349,42 @@ Returns:
         {
             lexicalizedCode.push_back(make_pair(lexeme, OPERATOR));
         }
-        else if (lexeme[0] == '#')
+        else if (std::any_of(specialWords.begin(), specialWords.end(), [&](const std::string &p)
+                             { return code.starts_with(p); }))
+        {
+            lexicalizedCode.push_back(make_pair(lexeme, SPECIAL));
+        }
+        else if ((currentLang == PYTHON && (lexeme.substr(0, 3) == "\"\"\"" || lexeme.substr(0, 3) == "'''")) || (currentLang == CPP && lexeme.substr(0, 2) == "/*"))
         {
             lexicalizedCode.push_back(make_pair(lexeme, COMMENT));
         }
-        else if (lexeme[0] == '\'' || lexeme[0] == '"' || docString)
+        else if ((currentLang == PYTHON && lexeme.size() > 2 && (lexeme.substr(lexeme.size() - 3, 3) == "\"\"\"" || lexeme.substr(lexeme.size() - 3, 3) == "'''")) || (currentLang == CPP && lexeme.size() > 1 && (lexeme.substr(lexeme.size() - 2, 2) == "*/")))
         {
+            lexicalizedCode.push_back(make_pair(lexeme, COMMENT));
+        }
+        else if ((docString && ((currentLang == PYTHON && code.find("\"\"\"") == string::npos && code.find("'''") == string::npos) || (currentLang == CPP && code.find("/*") == string::npos))) || (lexeme[0] == '#' && currentLang == PYTHON) || (lexeme.substr(0, 2) == "//" && currentLang == CPP))
+        {
+            lexicalizedCode.push_back(make_pair(lexeme, COMMENT));
+        }
+        else if (lexeme[0] == '\'' || lexeme[0] == '"')
+        {
+            if (lexicalizedCode.size() > 0)
+            {
+                if (currentLang == PYTHON)
+                {
+                    if (lexicalizedCode[lexicalizedCode.size() - 1].first == "r")
+                        lexicalizedCode[lexicalizedCode.size() - 1].second = STRING;
+                }
+                else if (currentLang == CPP)
+                {
+                    if (lexeme.size() > 1)
+                    {
+                        if (lexicalizedCode[lexicalizedCode.size() - 1].first == "R" && lexeme[1] == '(' && lexeme[lexeme.size() - 2] == ')')
+                            lexicalizedCode[lexicalizedCode.size() - 1].second = STRING;
+                    }
+                }
+            }
+
             string txt = "";
             int i = 0;
             for (int x = 0; x < (int)lexeme.length(); x++)

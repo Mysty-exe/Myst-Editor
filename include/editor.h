@@ -105,6 +105,7 @@ public:
     void ctrlX();
     void ctrlY();
     void ctrlZ();
+    void ctrlSlash();
 
     void goToMouse();
     void scrollUp();

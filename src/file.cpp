@@ -1,4 +1,3 @@
-#pragma once
 #include "file.h"
 
 File::File()

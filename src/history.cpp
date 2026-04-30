@@ -1,4 +1,3 @@
-#pragma once
 #include "history.h"
 
 HistoryStack::HistoryStack()
@@ -28,7 +27,6 @@ Returns:
     int
  */
 
-
 {
     return queueNum;
 }
@@ -40,7 +38,6 @@ stackSize Getter Function
 Returns:
     int
  */
-
 
 {
     return textStack.size();

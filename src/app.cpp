@@ -1,4 +1,3 @@
-#pragma once
 #include "app.h"
 
 App::App(int w, int h, string path)
@@ -487,6 +486,10 @@ Returns:
     case (90 & 0x1f):
         editor.ctrlZ();
         editor.goToMouse();
+        break;
+
+    case (63 & 0x1f):
+        editor.ctrlSlash();
         break;
 
     case (83 & 0x1f):

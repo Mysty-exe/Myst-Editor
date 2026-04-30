@@ -1,4 +1,3 @@
-#pragma once
 #include "buttons.h"
 
 Button::Button(string textParam, string toggleParam)

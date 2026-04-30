@@ -7,19 +7,30 @@
 #include <cstring>
 #include "app.h"
 
-std::string getProjectPathFromEnv()
+std::filesystem::path getExecutableDir()
 {
-    const char *path = std::getenv("MYST_PROJECT_PATH");
-    if (path)
+    char buffer[PATH_MAX];
+    ssize_t len = readlink("/proc/self/exe", buffer, sizeof(buffer) - 1);
+
+    if (len != -1)
     {
-        return std::string(path);
+        buffer[len] = '\0';
+        return std::filesystem::path(buffer).parent_path();
     }
-    return filesystem::current_path();
+
+    return std::filesystem::current_path();
+}
+
+std::string getProjectPath()
+{
+    auto base = getExecutableDir();
+    auto projectRoot = base.parent_path();
+    return projectRoot;
 }
 
 int main(int argc, char **argv)
 {
-    std::string projectPath = getProjectPathFromEnv();
+    std::string projectPath = getProjectPath();
     if (projectPath.empty())
     {
         std::cout << "Project path is not set in the environment variable." << std::endl;

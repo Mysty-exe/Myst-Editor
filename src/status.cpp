@@ -1,4 +1,3 @@
-#pragma once
 #include "status.h"
 
 StatusBar::StatusBar()

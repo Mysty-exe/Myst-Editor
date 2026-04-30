@@ -1,4 +1,3 @@
-#pragma once
 #include "editor.h"
 
 Editor::Editor()
@@ -686,20 +685,19 @@ Returns:
 		stack.truncateStack();
 	}
 
-	if (highlighting)
+	if (!autoComplete || !checkSpecialChar(character))
 	{
 		deleteHighlighted();
 		endHightlight();
 	}
 
-	if (checkSpecialChar(file.getLineWTabs(lineY)[lineX - 1]) && checkOtherChar(file.getLineWTabs(lineY)[lineX]) && checkSpecialChar(character) && autoComplete)
+	if (!highlighting && checkSpecialChar(file.getLineWTabs(lineY)[lineX - 1]) && checkOtherChar(file.getLineWTabs(lineY)[lineX]) && checkSpecialChar(character) && autoComplete)
 	{
 		auto it = std::find(specialCharacters.begin(), specialCharacters.end(), character);
 		file.insertChar(lineY, getTabX(lineX), character);
 		file.insertChar(lineY, getTabX(lineX + 1), otherCharacters[it - specialCharacters.begin()]);
 	}
-
-	else if (!checkOtherChar(character) || !autoComplete || !(file.getLineWTabs(lineY)[lineX] == character))
+	else if (!highlighting && (!checkOtherChar(character) || !autoComplete || !(file.getLineWTabs(lineY)[lineX] == character)))
 	{
 		file.insertChar(lineY, getTabX(lineX), character);
 	}
@@ -762,6 +760,7 @@ Returns:
 						}
 					}
 				}
+				break;
 			}
 		}
 	}
@@ -1257,6 +1256,73 @@ Returns:
 	cursorY = getWrappedCursorY(lineY, lineX);
 }
 
+void Editor::ctrlSlash()
+{
+	if (scanner.getLanguage() == NONE)
+		return;
+
+	if (state != "ctrlslash")
+	{
+		state = "ctrlslash";
+		stack.addToStack(file.getLines(), lineX, lineY);
+		stack.truncateStack();
+	}
+
+	if (!highlighting)
+	{
+		if (scanner.getLanguage() == PYTHON)
+		{
+			file.insertChar(lineY, 0, '#');
+			file.insertChar(lineY, 1, ' ');
+		}
+		else
+		{
+			file.insertChar(lineY, 0, '/');
+			file.insertChar(lineY, 1, '/');
+			file.insertChar(lineY, 2, ' ');
+		}
+	}
+	else
+	{
+		auto x = orderHighlight();
+		for (int i = x[0].second; i <= x[1].second; i++)
+		{
+			if (scanner.getLanguage() == PYTHON)
+			{
+				file.insertChar(i, 0, '#');
+				file.insertChar(i, 1, ' ');
+			}
+			else
+			{
+				file.insertChar(i, 0, '/');
+				file.insertChar(i, 1, '/');
+				file.insertChar(i, 2, ' ');
+			}
+		}
+
+		if (scanner.getLanguage() == PYTHON)
+		{
+			selectedText[0].first += 2;
+			selectedText[1].first += 2;
+		}
+		else
+		{
+			selectedText[0].first += 3;
+			selectedText[1].first += 3;
+		}
+	}
+
+	if (scanner.getLanguage() == PYTHON)
+		lineX += 2;
+	else
+		lineX += 3;
+
+	cursorX = getWrappedX(lineX);
+
+	stack.updateStack(file.getLines(), lineX, lineY);
+	state = "";
+}
+
 void Editor::goToMouse()
 /**
 Goes to the mouse if its not on the screen
@@ -1597,13 +1663,9 @@ Returns:
 			{
 				break;
 			}
-			else if (lineY == orderHighlight()[1].second || lineY == orderHighlight()[0].second)
-			{
-				backspace();
-			}
 			else
 			{
-				deleteLine();
+				backspace();
 			}
 		}
 	}
@@ -2025,11 +2087,18 @@ Returns:
 {
 	bool useLexer = false;
 	scanner.setDocString(false);
+	scanner.setLanguage(NONE);
 	if (getFile().getName().length() > 2)
 	{
-		if (getFile().getName().substr(getFile().getName().length() - 3, 3) == ".py")
+		std::string ext = getFile().getName().substr(getFile().getName().length() - 3, 3);
+		if (ext == ".py")
 		{
 			scanner.setLanguage(PYTHON);
+			useLexer = true;
+		}
+		if (ext == "cpp" || ext == ".cc" || getFile().getName().substr(getFile().getName().length() - 2, 2) == ".c" || getFile().getName().substr(getFile().getName().length() - 2, 2) == ".h")
+		{
+			scanner.setLanguage(CPP);
 			useLexer = true;
 		}
 	}

@@ -11,7 +11,7 @@ It handles user input, rendering, and file operations without relying on externa
 ## Core Features
 
 - Keyboard driven editing workflow
-- Syntax highlighting for Python
+- Syntax highlighting for Python and C/C++
 - Theme system with configurable color schemes
 - Multi file navigation and switching
 - Save and Save As functionality
@@ -47,7 +47,7 @@ It handles user input, rendering, and file operations without relying on externa
 
 ### Syntax Highlighting
 
-- Token based parsing for Python files
+- Token based parsing for both Python and C/C++ files
 - Identifies keywords, strings, and comments
 - Applies color mapping based on theme configuration
 
@@ -98,6 +98,7 @@ General
 - Ctrl Q: quit
 - Ctrl S: save
 - Ctrl E: open menu
+- Ctrl T: see files in directory
 - Ctrl P: preferences
 
 Navigation
@@ -108,6 +109,7 @@ Navigation
 Editing
 
 - Ctrl F: find and replace
+- Ctrl /: comment out lines
 
 ## Project Structure
 

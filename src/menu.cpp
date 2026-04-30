@@ -1,4 +1,3 @@
-#pragma once
 #include "menu.h"
 
 Menu::Menu()
@@ -521,14 +520,13 @@ Returns:
             else if (filesystem::is_regular_file(path, ec))
             {
                 if (File::overwrite(path))
-                {
                     file.open(path);
-                }
+
                 return 1;
             }
             return 0;
         }
-        catch (exception)
+        catch (exception &e)
         {
             return 1;
         }
