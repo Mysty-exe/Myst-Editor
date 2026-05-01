@@ -332,7 +332,7 @@ Returns:
 {
     if (currentMenu == 0)
     {
-        settingsList.displayButtons(menuPad, height);
+        settingsList.displayButtons(menuPad, width, height);
     }
     else if (currentMenu == 1)
     {
@@ -340,7 +340,7 @@ Returns:
     }
     else if (currentMenu == 2)
     {
-        preferencesList.displayButtons(menuPad, height);
+        preferencesList.displayButtons(menuPad, width, height);
     }
 }
 
@@ -414,7 +414,6 @@ Returns:
 
 {
     int line = height / 2 - 9;
-    int x = (width - 30) / 2 - 20;
     for (string &text : texts)
     {
         if (currentMenu == 0)
@@ -431,7 +430,7 @@ Returns:
                 wattron(menuPad, COLOR_PAIR(1));
             }
         }
-        mvwprintw(menuPad, line, x + 30, text.c_str(), "%s");
+        mvwprintw(menuPad, line, width / 2 + 10, text.c_str(), "%s");
         wattroff(menuPad, COLOR_PAIR(1));
         line += 1;
     }

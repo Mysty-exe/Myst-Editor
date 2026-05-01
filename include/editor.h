@@ -44,6 +44,7 @@ private:
     int copiedLines;
     int pastedLines;
 
+    bool dragging;
     bool highlighting;
     bool cursorVisible;
     string lastSaved;
@@ -118,11 +119,15 @@ public:
     void downArrow();
     void leftArrow();
     void rightArrow();
+    void goToLine(int x, int y);
 
     void highlight();
     void endHightlight();
     vector<pair<int, int>> orderHighlight();
     void deleteHighlighted();
+    void startDragging();
+    void endDragging();
+    void drag(int x, int y);
 
     int find(string text);
     void replaceAllInstances(string from, string to);

@@ -1,4 +1,4 @@
-# Terminal Text Editor (Myst)
+# Terminal Text Editor (Myst Editor)
 
 A terminal based text editor built with C++ and ncurses.  
 The editor focuses on fast keyboard driven editing, customizable themes, and lightweight performance in terminal environments.
@@ -22,14 +22,13 @@ It handles user input, rendering, and file operations without relying on externa
 
 ![Logo](resources/screenshots/Logo.png)
 ![Code](resources/screenshots/Code.png)
-![Files](resources/screenshots/Files.png)
 ![Settings](resources/screenshots/Settings.png)
 
 ## Technical Details
 
 ### Input System
 
-- Uses ncurses for raw keyboard input handling
+- Uses ncurses for raw keyboard and mouse input handling
 - Processes key events for navigation and editing commands
 - Uses custom keybindings and shortcuts
 
@@ -125,9 +124,7 @@ build/       generated files
 
 - Support for more programming languages
 - Improved syntax parsing system
-- More efficient text buffer structure
 - Plugin system for extensions
-- Mouse support
 
 ## Notes
 

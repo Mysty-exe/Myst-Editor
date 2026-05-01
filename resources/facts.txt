@@ -37,7 +37,6 @@ Google processes over 3.5 billion searches every day
 Compilers translate high-level code into machine code
 Python is often used in artificial intelligence and machine learning
 Scratch is a visual programming language designed for kids
-CAPTCHA stands for Completely Automated Public Turing Test to Tell Computers and Humans Apart
 CSS is used to style HTML content
 Alan Turing is considered the father of theoretical computer science
 Unicode includes emojis as part of its character set
@@ -55,7 +54,6 @@ The first mobile app store was launched by Nokia in 1998
 ASCII stands for American Standard Code for Information Interchange
 The first computer virus, Elk Cloner, was created in 1982
 Mark Zuckerberg wrote the first version of Facebook in just a few weeks
-CAPTCHA stands for Completely Automated Public Turing test to tell Computers and Humans Apart
 The FORTRAN language was designed for scientific computing in the 1950s
 Hackers initially referred to skilled computer enthusiasts, not cybercriminals
 Apple's first logo featured Isaac Newton sitting under a tree
@@ -78,11 +76,9 @@ The first commercial computer was the UNIVAC, launched in 1951
 Google processes over 3.5 billion searches per day, powered by code
 The first hard drive was created by IBM in 1956 and weighed over a ton
 Object-oriented programming organizes code using classes and objects
-The first gaming console, Magnavox Odyssey, used cartridges with pre-programmed code
 The term coding comes from the word code, meaning a system of rules
 A kilobyte is 1024 bytes, not 1000, due to binary counting
 The first digital calculator was created by Konrad Zuse in 1938
-Alan Turing developed the concept of a universal machine, a precursor to modern computers
 The term bug in software was popularized by Grace Hopper
 The average lifespan of a software engineer's code is about 6 years
 JSON stands for JavaScript Object Notation and is widely used for APIs

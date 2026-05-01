@@ -52,6 +52,7 @@ Returns:
 	scroll = 0;
 	cursorVisible = true;
 
+	dragging = false;
 	highlighting = false;
 	selectedText = {};
 	selectedText.push_back(make_pair(0, 0));
@@ -1587,6 +1588,33 @@ Returns:
 	stack.updateCursorStack(lineX, lineY);
 }
 
+void Editor::goToLine(int x, int y)
+{
+	if (lineNums)
+		x -= 3 + to_string(file.getLines().size()).size();
+	else
+		x -= 3;
+
+	lineX = x;
+	lineY = y + scroll;
+	if (y > (int)file.getLines().size() - 1)
+		lineY = file.getLines().size() - 1;
+	if (x > file.getLineLength(lineY))
+		lineX = file.getLineLength(lineY);
+
+	for (const int t : file.getTabs(lineY, tabSize))
+	{
+		if (lineX < t && lineX > t - tabSize)
+		{
+			lineX = t;
+			break;
+		}
+	}
+
+	cursorX = getWrappedX(lineX);
+	cursorY = getWrappedCursorY(lineY, lineX);
+}
+
 void Editor::highlight()
 /**
 Starts highlighting
@@ -1615,6 +1643,7 @@ Returns:
  */
 
 {
+	endDragging();
 	selectedText[0].first = 0;
 	selectedText[0].second = 0;
 	selectedText[1].first = 0;
@@ -1653,22 +1682,47 @@ Returns:
 {
 	if (highlighting)
 	{
-		lineX = orderHighlight()[1].first;
-		lineY = orderHighlight()[1].second;
+		if (state != "delHighlight")
+		{
+			state = "delHighlight";
+			stack.addToStack(file.getLines(), lineX, lineY);
+			stack.truncateStack();
+		}
+
+		lineX = orderHighlight()[0].first;
+		lineY = orderHighlight()[0].second;
 		cursorX = getWrappedX(lineX);
 		cursorY = getWrappedCursorY(lineY, lineX);
-		while (true)
-		{
-			if (lineX == orderHighlight()[0].first && lineY == orderHighlight()[0].second)
-			{
-				break;
-			}
-			else
-			{
-				backspace();
-			}
-		}
+
+		for (int i = orderHighlight()[1].first - 1; i >= 0; i--)
+			file.delChar(orderHighlight()[1].second, i);
+
+		for (int i = orderHighlight()[1].second - 1; i > orderHighlight()[0].second; i--)
+			file.delLine(i);
+
+		for (int i = file.getLineLength(orderHighlight()[0].second); i >= orderHighlight()[0].first; i--)
+			file.delChar(orderHighlight()[0].second, i);
+
+		file.addStr(orderHighlight()[0].second, file.getLine(orderHighlight()[0].second + 1));
+		file.delLine(orderHighlight()[0].second + 1);
+
+		stack.updateStack(file.getLines(), lineX, lineY);
+		state = "";
 	}
+}
+
+void Editor::startDragging()
+{
+	dragging = true;
+}
+
+void Editor::endDragging()
+{
+	dragging = false;
+}
+
+void Editor::drag(int x, int y)
+{
 }
 
 int Editor::find(string text)
@@ -2305,7 +2359,6 @@ int Editor::getWrappedCursorY(int y, int x)
 Gets the current cursor Y (no matter line wrapping)
 
 Args:
-	(string) copiedLine: Line to print
 	(int) lineNum: Current line number
 	(int) &tempY: Current y position to print the line
 Returns:

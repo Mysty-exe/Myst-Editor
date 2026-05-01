@@ -46,7 +46,7 @@ public:
     int getCurrentButton();
     void setCurrentButton(int btn);
 
-    void displayButtons(WINDOW *win, int height);
+    void displayButtons(WINDOW *win, int width, int height);
     void displayFiles(WINDOW *win, string directory);
 
     void upArrow(int &scroll);

@@ -150,7 +150,7 @@ Returns:
     currentButton = btn;
 }
 
-void ButtonsList::displayButtons(WINDOW *win, int height)
+void ButtonsList::displayButtons(WINDOW *win, int width, int height)
 /**
 Displays all the buttons
 
@@ -176,7 +176,7 @@ Returns:
         {
             text += " = " + button.getToggle();
         }
-        mvwprintw(win, inc, 10, text.c_str(), "%s");
+        mvwprintw(win, inc, width / 2 - 50, text.c_str(), "%s");
         wattroff(win, COLOR_PAIR(14));
         inc += 3;
     }

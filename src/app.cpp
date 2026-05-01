@@ -395,20 +395,28 @@ Returns:
  */
 
 {
-    MEVENT event;
     switch (character)
     {
     case KEY_MOUSE:
-        if (getmouse(&event) == OK)
+        MEVENT event;
+        getmouse(&event);
+        editor.drag(event.x, event.y);
+        if (event.bstate & BUTTON1_CLICKED)
         {
-            if (event.bstate & BUTTON4_PRESSED)
-            {
-                editor.scrollUp();
-            }
-            else if (event.bstate & BUTTON5_PRESSED)
-            {
-                editor.scrollDown();
-            }
+            editor.endHightlight();
+            editor.goToLine(event.x, event.y);
+        }
+        if (event.bstate & BUTTON1_PRESSED)
+        {
+            editor.startDragging();
+        }
+        if (event.bstate & BUTTON4_PRESSED)
+        {
+            editor.scrollUp();
+        }
+        else if (event.bstate & BUTTON5_PRESSED)
+        {
+            editor.scrollDown();
         }
         break;
 
@@ -421,6 +429,7 @@ Returns:
         break;
 
     case KEY_BACKSPACE:
+        editor.endDragging();
         editor.deleteHighlighted();
         if (!editor.getHighlighting())
         {
@@ -431,11 +440,13 @@ Returns:
         break;
 
     case 9:
+        editor.endDragging();
         editor.tab();
         editor.goToMouse();
         break;
 
     case 10:
+        editor.endDragging();
         editor.deleteHighlighted();
         editor.endHightlight();
         editor.enter();
@@ -443,6 +454,7 @@ Returns:
         break;
 
     case (65 & 0x1f):
+        editor.endDragging();
         editor.ctrlA();
         break;
 
@@ -451,11 +463,13 @@ Returns:
         break;
 
     case (70 & 0x1f):
+        editor.endDragging();
         status.setState("find");
         MODE = 2;
         break;
 
     case (81 & 0x1f):
+        editor.endDragging();
         if (editor.getFile().unsavedFile())
         {
             status.resetStatus();
@@ -469,26 +483,31 @@ Returns:
         break;
 
     case (86 & 0x1f):
+        editor.endDragging();
         editor.ctrlV();
         editor.goToMouse();
         break;
 
     case (88 & 0x1f):
+        editor.endDragging();
         editor.ctrlX();
         editor.goToMouse();
         break;
 
     case (89 & 0x1f):
+        editor.endDragging();
         editor.ctrlY();
         editor.goToMouse();
         break;
 
     case (90 & 0x1f):
+        editor.endDragging();
         editor.ctrlZ();
         editor.goToMouse();
         break;
 
     case (63 & 0x1f):
+        editor.endDragging();
         editor.ctrlSlash();
         break;
 
@@ -497,6 +516,7 @@ Returns:
         break;
 
     case (69 & 0x1f):
+        editor.endDragging();
         werase(editor.linesPad);
         werase(editor.textPad);
         werase(status.statusWindow);
@@ -504,6 +524,7 @@ Returns:
         break;
 
     case (84 & 0x1f):
+        editor.endDragging();
         werase(editor.linesPad);
         werase(editor.textPad);
         werase(status.statusWindow);
@@ -511,6 +532,7 @@ Returns:
         break;
 
     case (80 & 0x1f):
+        editor.endDragging();
         werase(editor.linesPad);
         werase(editor.textPad);
         werase(status.statusWindow);
@@ -518,39 +540,47 @@ Returns:
         break;
 
     case (66 & 0x1f):
+        editor.endDragging();
         editor.previousFile();
         break;
 
     case (78 & 0x1f):
+        editor.endDragging();
         editor.nextFile();
         break;
 
     case (68 & 0x1f):
+        editor.endDragging();
         MODE = 0;
         endwin();
         break;
 
     case KEY_SR:
+        editor.endDragging();
         editor.shiftUpArrow();
         editor.goToMouse();
         break;
 
     case KEY_SF:
+        editor.endDragging();
         editor.shiftDownArrow();
         editor.goToMouse();
         break;
 
     case KEY_SLEFT:
+        editor.endDragging();
         editor.shiftLeftArrow();
         editor.goToMouse();
         break;
 
     case KEY_SRIGHT:
+        editor.endDragging();
         editor.shiftRightArrow();
         editor.goToMouse();
         break;
 
     case KEY_UP:
+        editor.endDragging();
         if (!editor.getHighlighting())
         {
             editor.upArrow();
@@ -560,6 +590,7 @@ Returns:
         break;
 
     case KEY_DOWN:
+        editor.endDragging();
         if (!editor.getHighlighting())
         {
             editor.downArrow();
@@ -569,6 +600,7 @@ Returns:
         break;
 
     case KEY_LEFT:
+        editor.endDragging();
         if (!editor.getHighlighting())
         {
             editor.leftArrow();
@@ -578,6 +610,7 @@ Returns:
         break;
 
     case KEY_RIGHT:
+        editor.endDragging();
         if (!editor.getHighlighting())
         {
             editor.rightArrow();
