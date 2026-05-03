@@ -1,18 +1,17 @@
 Myst is a simple terminal-based text editor.
 
 General Usage:
-  myst              Opens a blank file in the editor.
-  myst {file name}  Opens the specified file.
+  myst               Opens a blank file in the editor.
+  myst {file name}   Opens the specified file.
 
 Shortcuts:
-  Ctrl-S   -   Save
-  Ctrl-F   -   Find/Replace
-  Ctrl-E   -   Settings/Menu
-  Ctrl-P   -   Preferences
-  Ctrl-B   -   Previous File
-  Ctrl-N   -   Next File
-  Ctrl-Q   -   Quit
+  Ctrl-S -           Save
+  Ctrl-F -           Find/Replace
+  Ctrl-E -           Settings/Menu
+  Ctrl-P -           Preferences
+  Ctrl-B -           Previous File
+  Ctrl-N -           Next File
+  Ctrl-Q -           Quit
 
 Options:
   -help             Displays this help message.
-

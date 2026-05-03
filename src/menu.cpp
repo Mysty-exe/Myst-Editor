@@ -11,7 +11,7 @@ Returns:
 {
 }
 
-Menu::Menu(int w, int h, Settings &settings, string projectFile)
+Menu::Menu(int w, int h, Settings &settings)
 /**
 Menu Class Constructor
 
@@ -36,43 +36,34 @@ Returns:
  */
 
 {
-    srand((unsigned)time(NULL));
-
     fact = "";
-    int lineNumber = 1;
-    int random = 1 + (rand() % 101);
-    fstream readFile(projectFile + "/resources/facts.txt");
-    while (getline(readFile, fact))
-    {
-        if (lineNumber == random)
-        {
-            break;
-        }
-        lineNumber++;
-    }
-
     width = w;
     height = h;
     scroll = 0;
     currentMenu = 0;
     currentDirectory = filesystem::current_path();
+    for (int i = currentDirectory.size(); i >= 0; i--)
+    {
+        if (currentDirectory[i] == '.')
+        {
+            currentDirectory = currentDirectory.substr(0, currentDirectory.find_last_of("/"));
+            break;
+        }
+        if (currentDirectory[i] == '/')
+            break;
+    }
 
     settingsButtons = {Button("Back"), Button("Save"), Button("Save As"), Button("Switch File"), Button("Preferences"), Button("Quit")};
     switchButtons = {};
-    preferencesButtons = {Button("Back"), Button("Line Numbers", settings.getLineNumbers()), Button("Tabsize", settings.getTabSize()), Button("Programming", settings.getProgrammingMode()), Button("Colour", settings.getColorScheme())};
+    preferencesButtons = {Button("Back"), Button("Line Numbers", false, settings.getLineNumbers()), Button("Tabsize", false, settings.getTabSize()), Button("Programming", false, settings.getProgrammingMode()), Button("Colour", false, settings.getColorScheme())};
 
     settingsList.newButtonList(settingsButtons);
     switchList.newButtonList(switchButtons);
     preferencesList.newButtonList(preferencesButtons);
 
-    if ((int)switchButtons.size() > height)
-    {
-        menuPad = newpad(switchButtons.size(), width);
-    }
-    else
-    {
-        menuPad = newpad(height, width);
-    }
+    filesPad = newpad(height - 10, width - 20);
+    menu = newwin(height - 10, width - 20, 5, 10);
+    menuPanel = new_panel(menu);
 }
 
 int Menu::getCurrentMenu()
@@ -207,10 +198,20 @@ Returns:
  */
 
 {
+    for (int i = dir.size(); i >= 0; i--)
+    {
+        if (dir[i] == '.')
+        {
+            dir = dir.substr(0, dir.find_last_of("/"));
+            break;
+        }
+        if (dir[i] == '/')
+            break;
+    }
     currentDirectory = dir;
 }
 
-void Menu::updateDimensions()
+void Menu::updateDimensions(int width, int height)
 /**
 Updates dimensions if terminal size changes
 
@@ -219,27 +220,29 @@ Returns:
  */
 
 {
-    delwin(menuPad);
-    getmaxyx(stdscr, height, width);
+    this->width = width;
+    this->height = height;
 
-    if ((int)switchButtons.size() > height)
-    {
-        menuPad = newpad(switchButtons.size(), width);
-    }
-    else
-    {
-        menuPad = newpad(height, width);
-    }
-    keypad(menuPad, true);
+    werase(menu);
+    update_panels();
+    doupdate();
 
-    if (currentMenu == 1)
-    {
-        prefresh(menuPad, scroll, 0, 3, 0, height - 4, width - 1);
-    }
-    else
-    {
-        prefresh(menuPad, scroll, 0, 0, 0, height - 1, width - 1);
-    }
+    delwin(filesPad);
+    del_panel(menuPanel);
+    delwin(menu);
+    menu = newwin(height - 10, width - 20, 5, 10);
+    menuPanel = new_panel(menu);
+    filesPad = newpad(height - 10, width - 20);
+    box(menu, 0, 0);
+
+    prefresh(filesPad,
+             0, 0,
+             5, 10,
+             5 + (height - 10), 10 + longestFile);
+
+    keypad(menu, true);
+    update_panels();
+    doupdate();
 }
 
 vector<Button> Menu::getButtons()
@@ -284,7 +287,7 @@ Returns:
     }
 }
 
-void Menu::setFileButtons(string directory)
+void Menu::setFileButtons(string directory, string currentFile)
 /**
 Sets the buttons of the files based on the directory
 
@@ -296,6 +299,8 @@ Returns:
  */
 
 {
+    numFiles = 0;
+    longestFile = width / 6;
     switchButtons = {};
     error_code ec;
     if (filesystem::is_regular_file(directory, ec))
@@ -304,21 +309,35 @@ Returns:
     }
     for (auto &p : filesystem::directory_iterator(directory))
     {
-        switchButtons.push_back(Button(p.path()));
+        numFiles++;
+        int l = 0;
+        for (int i = p.path().string().size() - 1; i > 0; i--)
+        {
+            if (p.path().string()[i] != '/')
+                l++;
+            else
+                break;
+        }
+
+        if (currentFile == p.path().string().substr(p.path().string().size() - l, l))
+            switchList.setCurrentButton(numFiles - 1);
+
+        if (l > longestFile)
+            longestFile = (l > width - 20) ? width - 20 : l;
+
+        switchButtons.push_back(Button(p.path(), p.is_directory()));
     }
     if (switchButtons.size() == 0)
     {
         switchButtons.push_back(Button("No Files In Folder"));
     }
-    setButtons(switchButtons);
 
     switchList.setButtons(switchButtons);
-    int h, w;
-    getmaxyx(menuPad, h, w);
-    if ((int)switchButtons.size() > h)
-    {
-        updateDimensions();
-    }
+
+    delwin(filesPad);
+    filesPad = newpad(numFiles + 10, width - 20);
+
+    longestFile += 10;
 }
 
 void Menu::displayButtons()
@@ -332,15 +351,15 @@ Returns:
 {
     if (currentMenu == 0)
     {
-        settingsList.displayButtons(menuPad, width, height);
+        settingsList.displayButtons(menu, height);
     }
     else if (currentMenu == 1)
     {
-        switchList.displayFiles(menuPad, currentDirectory);
+        switchList.displayFiles(filesPad);
     }
     else if (currentMenu == 2)
     {
-        preferencesList.displayButtons(menuPad, width, height);
+        preferencesList.displayButtons(menu, height);
     }
 }
 
@@ -371,9 +390,9 @@ Returns:
     text.push_back("Ctrl-T   -   Switch File");
     text.push_back("Ctrl-P   -   Preferences");
     text.push_back("Ctrl-Q   -   Quit");
-    text.push_back("");
-    text.push_back("Did You Know?");
-    text.push_back(fact);
+    // text.push_back("");
+    // text.push_back("Did You Know?");
+    // text.push_back(fact);
     return text;
 }
 
@@ -413,25 +432,25 @@ Returns:
  */
 
 {
-    int line = height / 2 - 9;
+    int line = height / 2 - 12;
     for (string &text : texts)
     {
         if (currentMenu == 0)
         {
-            if (line == (height / 2 - 9) || line == (height / 2 - 9) + 5 || line == (height / 2 - 9) + 7 || line == (height / 2 - 9) + 17)
+            if (line == (height / 2 - 12) || line == (height / 2 - 12) + 5 || line == (height / 2 - 12) + 7 || line == (height / 2 - 12) + 17)
             {
-                wattron(menuPad, COLOR_PAIR(1));
+                wattron(menu, COLOR_PAIR(1));
             }
         }
         else if (currentMenu == 2)
         {
-            if ((line - (height / 2 - 9)) % 4 == 0)
+            if ((line - (height / 2 - 12)) % 4 == 0)
             {
-                wattron(menuPad, COLOR_PAIR(1));
+                wattron(menu, COLOR_PAIR(1));
             }
         }
-        mvwprintw(menuPad, line, width / 2 + 10, text.c_str(), "%s");
-        wattroff(menuPad, COLOR_PAIR(1));
+        mvwprintw(menu, line, width / 2, text.c_str(), "%s");
+        wattroff(menu, COLOR_PAIR(1));
         line += 1;
     }
 }
@@ -474,7 +493,7 @@ Returns:
     }
     else if (currentMenu == 1)
     {
-        switchList.downArrow(height - 10, scroll);
+        switchList.downArrow(height - 20, scroll);
     }
     else if (currentMenu == 2)
     {

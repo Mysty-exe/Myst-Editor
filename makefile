@@ -16,7 +16,7 @@ OBJ_FILES = $(OBJ_CPP) $(OBJ_C)
 all: build_dirs $(TARGET)
 
 $(TARGET): $(OBJ_FILES)
-	$(CXX) $(CXXFLAGS) $(OBJ_FILES) -o $(TARGET) -lncurses
+	$(CXX) $(CXXFLAGS) $(OBJ_FILES) -o $(TARGET) -lncurses -lpanel
 
 # Compile cpp → build/obj/*.o
 $(OBJ_DIR)/%.o: src/%.cpp

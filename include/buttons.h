@@ -15,12 +15,14 @@ class Button
 private:
     string text;
     string toggle;
+    bool isDir;
     int y;
 
 public:
-    Button(string txt, string t = "");
+    Button(string txt, bool isDir = false, string t = "");
     string getText();
     string getToggle();
+    bool isDirectory() { return isDir; };
     void setToggle(string t);
     int getY();
 };
@@ -46,8 +48,8 @@ public:
     int getCurrentButton();
     void setCurrentButton(int btn);
 
-    void displayButtons(WINDOW *win, int width, int height);
-    void displayFiles(WINDOW *win, string directory);
+    void displayButtons(WINDOW *win, int height);
+    void displayFiles(WINDOW *win);
 
     void upArrow(int &scroll);
     void downArrow(int height, int &scroll);

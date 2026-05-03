@@ -1,6 +1,6 @@
 #include "buttons.h"
 
-Button::Button(string textParam, string toggleParam)
+Button::Button(string textParam, bool isDir, string toggleParam)
 /**
 Button Class Constructor
 
@@ -15,6 +15,7 @@ Returns:
 {
     text = textParam;
     toggle = toggleParam;
+    this->isDir = isDir;
 }
 
 string Button::getText()
@@ -150,7 +151,7 @@ Returns:
     currentButton = btn;
 }
 
-void ButtonsList::displayButtons(WINDOW *win, int width, int height)
+void ButtonsList::displayButtons(WINDOW *win, int height)
 /**
 Displays all the buttons
 
@@ -164,10 +165,10 @@ Returns:
 
 {
     werase(win);
-    int inc = height / 2 - 9;
+    int inc = height / 2 - 12;
     for (Button button : buttons)
     {
-        if (inc - (height / 2 - 9) == currentButton * 3)
+        if (inc - (height / 2 - 12) == currentButton * 3)
         {
             wattron(win, COLOR_PAIR(14));
         }
@@ -176,13 +177,13 @@ Returns:
         {
             text += " = " + button.getToggle();
         }
-        mvwprintw(win, inc, width / 2 - 50, text.c_str(), "%s");
+        mvwprintw(win, inc, 20, text.c_str(), "%s");
         wattroff(win, COLOR_PAIR(14));
         inc += 3;
     }
 }
 
-void ButtonsList::displayFiles(WINDOW *win, string directory)
+void ButtonsList::displayFiles(WINDOW *win)
 /**
 Displays list of files as buttons
 
@@ -196,12 +197,10 @@ Returns:
  */
 
 {
-    werase(win);
     wattron(win, COLOR_PAIR(1));
-    mvwprintw(win, 0, 10, "Current Directory:");
+    mvwprintw(win, 2, 4, "Press CTRL-T To Exit");
     wattroff(win, COLOR_PAIR(1));
-    mvwprintw(win, 1, 10, directory.c_str(), "%s");
-    mvwprintw(win, 2, 10, "Press CTRL-T To Exit");
+    int i = 0;
 
     int inc = 4;
     for (Button button : buttons)
@@ -212,7 +211,10 @@ Returns:
         }
         string text = button.getText();
         int getSlashLoc = text.find_last_of("/");
-        mvwprintw(win, inc, 10, text.substr(getSlashLoc, text.length() - getSlashLoc).c_str(), "%s");
+        if (button.isDirectory())
+            mvwprintw(win, inc, 4, text.substr(getSlashLoc, text.length() - getSlashLoc).c_str(), "%s");
+        else
+            mvwprintw(win, inc, 4, text.substr(getSlashLoc + 1, text.length() - getSlashLoc).c_str(), "%s");
         wattroff(win, COLOR_PAIR(14));
         inc += 1;
     }

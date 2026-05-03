@@ -198,7 +198,7 @@ Returns:
     return confirmTxt;
 }
 
-void StatusBar::updateDimensions()
+void StatusBar::updateDimensions(int width, int height)
 /**
 Updates size of window if terminal has been changed
 
@@ -207,10 +207,12 @@ Returns:
  */
 
 {
-    getmaxyx(stdscr, height, width);
+    this->width = width;
+    this->height = height;
+
     delwin(statusWindow);
     statusWindow = newwin(1, width, height - 1, 0);
-    getmaxyx(statusWindow, height, width);
+    // getmaxyx(statusWindow, height, width);
     keypad(statusWindow, true);
     keypad(statusWindow, true);
     wrefresh(statusWindow);
@@ -517,7 +519,7 @@ Returns:
     }
 }
 
-void StatusBar::update()
+void StatusBar::update(bool forceUpdate)
 /**
 Updates the statusbar
 
@@ -527,7 +529,7 @@ Returns:
 
 {
     getDate();
-    if (modified)
+    if (modified || forceUpdate)
     {
         curs_set(0);
         modified = false;

@@ -75,19 +75,19 @@ cd Myst
 Build and run:
 
 ```
-make all
+make
 ```
 
 ## Run
 
 ```
-./build/myst.exe
+./build/myst
 ```
 
 Open a file:
 
 ```
-./build/myst.exe filename.txt
+./build/myst filename.txt
 ```
 
 ## Controls

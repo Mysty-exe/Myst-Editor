@@ -91,5 +91,7 @@ int main(int argc, char **argv)
 
     endwin();
 
+    printf("\033[?1003l\n");
+
     return 0;
 }

@@ -18,6 +18,7 @@ Returns:
     width = w;
     height = h;
     projectPath = path;
+    win = newwin(height - 5, width - 10, 2.5, 5);
 }
 
 void App::init()
@@ -32,7 +33,7 @@ Returns:
     settings.getSettings(projectPath);
     Editor editor(width, height);
     StatusBar status(width, height);
-    Menu menu(width, height, settings, projectPath);
+    Menu menu(width, height, settings);
     editor.setSettings(settings);
 
     setSettings(settings);
@@ -43,10 +44,27 @@ Returns:
     setColor(settings.getColorScheme());
 
     keypad(stdscr, true);
+    keypad(win, true);
     keypad(editor.textPad, true);
     keypad(status.statusWindow, true);
-    keypad(menu.menuPad, true);
+    keypad(menu.menu, true);
     nodelay(editor.textPad, true);
+}
+
+void App::updateDimensions()
+{
+    getmaxyx(stdscr, height, width);
+    this->width = width;
+    this->height = height;
+
+    delwin(win);
+    win = newwin(height - 5, width - 10, 2.5, 5);
+
+    editor.updateDimensions(width, height);
+    status.updateDimensions(width, height);
+    menu.updateDimensions(width, height);
+    editor.writeToScreen(status);
+    status.update(true);
 }
 
 int App::getMode()
@@ -332,23 +350,29 @@ Returns:
     curs_set(0);
 
     string text;
-    int tempY = (height / 2) - (16 / 2);
+    int tempY = ((height - 10) / 2) - (16 / 2);
 
     fstream readFile(projectPath + "/resources/logo.txt");
+
+    box(win, 0, 0);
+
     while (getline(readFile, text))
     {
-        if (tempY - ((height / 2) - (16 / 2)) < 13)
-        {
-            wattron(stdscr, COLOR_PAIR(1));
-        }
-        mvprintw(tempY, (width / 2) - (text.length() / 2), text.c_str(), "%s");
-        wattroff(stdscr, COLOR_PAIR(1));
+        if (tempY - (((height - 10) / 2) - (16 / 2)) < 13)
+            wattron(win, COLOR_PAIR(1));
+
+        mvwprintw(win, tempY, ((width - 10) / 2) - (text.length() / 2), text.c_str(), "%s");
+        wattroff(win, COLOR_PAIR(1));
 
         tempY++;
     }
 
     readFile.close();
+    wrefresh(win);
     getch();
+
+    werase(win);
+    wrefresh(win);
 }
 
 void App::checkForSpecialChars(int character)
@@ -400,15 +424,9 @@ Returns:
     case KEY_MOUSE:
         MEVENT event;
         getmouse(&event);
-        editor.drag(event.x, event.y);
         if (event.bstate & BUTTON1_CLICKED)
         {
-            editor.endHightlight();
             editor.goToLine(event.x, event.y);
-        }
-        if (event.bstate & BUTTON1_PRESSED)
-        {
-            editor.startDragging();
         }
         if (event.bstate & BUTTON4_PRESSED)
         {
@@ -422,14 +440,11 @@ Returns:
 
     case KEY_RESIZE:
         curs_set(0);
-        editor.updateDimensions();
-        status.updateDimensions();
-        menu.updateDimensions();
+        updateDimensions();
         curs_set(1);
         break;
 
     case KEY_BACKSPACE:
-        editor.endDragging();
         editor.deleteHighlighted();
         if (!editor.getHighlighting())
         {
@@ -440,13 +455,11 @@ Returns:
         break;
 
     case 9:
-        editor.endDragging();
         editor.tab();
         editor.goToMouse();
         break;
 
     case 10:
-        editor.endDragging();
         editor.deleteHighlighted();
         editor.endHightlight();
         editor.enter();
@@ -454,7 +467,6 @@ Returns:
         break;
 
     case (65 & 0x1f):
-        editor.endDragging();
         editor.ctrlA();
         break;
 
@@ -463,13 +475,11 @@ Returns:
         break;
 
     case (70 & 0x1f):
-        editor.endDragging();
         status.setState("find");
         MODE = 2;
         break;
 
     case (81 & 0x1f):
-        editor.endDragging();
         if (editor.getFile().unsavedFile())
         {
             status.resetStatus();
@@ -483,31 +493,26 @@ Returns:
         break;
 
     case (86 & 0x1f):
-        editor.endDragging();
         editor.ctrlV();
         editor.goToMouse();
         break;
 
     case (88 & 0x1f):
-        editor.endDragging();
         editor.ctrlX();
         editor.goToMouse();
         break;
 
     case (89 & 0x1f):
-        editor.endDragging();
         editor.ctrlY();
         editor.goToMouse();
         break;
 
     case (90 & 0x1f):
-        editor.endDragging();
         editor.ctrlZ();
         editor.goToMouse();
         break;
 
     case (63 & 0x1f):
-        editor.endDragging();
         editor.ctrlSlash();
         break;
 
@@ -516,71 +521,51 @@ Returns:
         break;
 
     case (69 & 0x1f):
-        editor.endDragging();
-        werase(editor.linesPad);
-        werase(editor.textPad);
-        werase(status.statusWindow);
         MODE = 3;
         break;
 
     case (84 & 0x1f):
-        editor.endDragging();
-        werase(editor.linesPad);
-        werase(editor.textPad);
-        werase(status.statusWindow);
         MODE = 4;
         break;
 
     case (80 & 0x1f):
-        editor.endDragging();
-        werase(editor.linesPad);
-        werase(editor.textPad);
-        werase(status.statusWindow);
         MODE = 5;
         break;
 
     case (66 & 0x1f):
-        editor.endDragging();
         editor.previousFile();
         break;
 
     case (78 & 0x1f):
-        editor.endDragging();
         editor.nextFile();
         break;
 
     case (68 & 0x1f):
-        editor.endDragging();
         MODE = 0;
         endwin();
         break;
 
     case KEY_SR:
-        editor.endDragging();
         editor.shiftUpArrow();
         editor.goToMouse();
         break;
 
     case KEY_SF:
-        editor.endDragging();
         editor.shiftDownArrow();
         editor.goToMouse();
         break;
 
     case KEY_SLEFT:
-        editor.endDragging();
         editor.shiftLeftArrow();
         editor.goToMouse();
         break;
 
     case KEY_SRIGHT:
-        editor.endDragging();
         editor.shiftRightArrow();
         editor.goToMouse();
         break;
 
     case KEY_UP:
-        editor.endDragging();
         if (!editor.getHighlighting())
         {
             editor.upArrow();
@@ -590,7 +575,6 @@ Returns:
         break;
 
     case KEY_DOWN:
-        editor.endDragging();
         if (!editor.getHighlighting())
         {
             editor.downArrow();
@@ -600,7 +584,6 @@ Returns:
         break;
 
     case KEY_LEFT:
-        editor.endDragging();
         if (!editor.getHighlighting())
         {
             editor.leftArrow();
@@ -610,7 +593,6 @@ Returns:
         break;
 
     case KEY_RIGHT:
-        editor.endDragging();
         if (!editor.getHighlighting())
         {
             editor.rightArrow();
@@ -651,9 +633,7 @@ Returns:
 
     case KEY_RESIZE:
         curs_set(0);
-        status.updateDimensions();
-        editor.updateDimensions();
-        editor.writeToScreen(status);
+        updateDimensions();
         curs_set(1);
         break;
 
@@ -688,7 +668,6 @@ Returns:
                 status.setFilename(filename);
                 if (File::overwrite(status.getFilename()))
                 {
-                    clear();
                     status.setState("save");
                     MODE = 7;
                 }
@@ -755,7 +734,7 @@ Returns:
         {
             if (editor.getFile().unsavedFile())
             {
-                clear();
+                // clear();
                 status.resetStatus();
                 status.setState("quit");
                 editor.writeToScreen(status);
@@ -770,16 +749,10 @@ Returns:
 
     case (69 & 0x1f):
         status.setState("");
-        werase(editor.linesPad);
-        werase(editor.textPad);
-        werase(status.statusWindow);
         MODE = 3;
         break;
 
     case (80 & 0x1f):
-        werase(editor.linesPad);
-        werase(editor.textPad);
-        werase(status.statusWindow);
         MODE = 5;
         break;
     }
@@ -799,15 +772,15 @@ Returns:
     switch (character)
     {
     case (KEY_RESIZE):
-        menu.updateDimensions();
-        editor.updateDimensions();
-        status.updateDimensions();
+        curs_set(0);
+        updateDimensions();
+        curs_set(1);
         break;
 
     case (81 & 0x1f):
         if (editor.getFile().unsavedFile())
         {
-            clear();
+            // clear();
             status.resetStatus();
             status.setState("quit");
             editor.writeToScreen(status);
@@ -827,24 +800,28 @@ Returns:
         menu.downArrow();
         break;
 
+    case (69 & 0x1f):
+        MODE = 1;
+        break;
+
     case (10):
         File file = editor.getFile();
         int action = menu.enter(file);
         editor.setFile(file);
         if (action == 0)
         {
-            clear();
+            // clear();
             MODE = 1;
         }
         else if (action == 1)
         {
-            clear();
+            // clear();
             editor.ctrlS(status);
             MODE = 1;
         }
         else if (action == 2)
         {
-            clear();
+            // clear();
             status.setState("save as");
             editor.writeToScreen(status);
             MODE = 6;
@@ -855,14 +832,12 @@ Returns:
         }
         else if (action == 4)
         {
-            clear();
             MODE = 5;
         }
         else if (action == 5)
         {
             if (editor.getFile().unsavedFile())
             {
-                clear();
                 status.resetStatus();
                 status.setState("quit");
                 editor.writeToScreen(status);
@@ -891,9 +866,9 @@ Returns:
     switch (character)
     {
     case (KEY_RESIZE):
-        menu.updateDimensions();
-        editor.updateDimensions();
-        status.updateDimensions();
+        curs_set(0);
+        updateDimensions();
+        curs_set(1);
         break;
 
     case (KEY_UP):
@@ -929,7 +904,6 @@ Returns:
     case (81 & 0x1f):
         if (editor.getFile().unsavedFile())
         {
-            clear();
             status.resetStatus();
             status.setState("quit");
             editor.writeToScreen(status);
@@ -942,6 +916,7 @@ Returns:
         break;
 
     case (84 & 0x1f):
+        menu.setCurrentDirectory(editor.getFile().getDirectory());
         MODE = 1;
         break;
     }
@@ -961,9 +936,9 @@ Returns:
     switch (character)
     {
     case (KEY_RESIZE):
-        menu.updateDimensions();
-        editor.updateDimensions();
-        status.updateDimensions();
+        curs_set(0);
+        updateDimensions();
+        curs_set(1);
         break;
 
     case (KEY_UP):
@@ -974,16 +949,17 @@ Returns:
         menu.downArrow();
         break;
 
+    case (80 & 0x1f):
+        MODE = 1;
+        break;
+
     case (10):
     {
         File file = editor.getFile();
         int action = menu.enter(file);
         if (action == 0)
         {
-            editor.setSettings(settings);
-            settings.saveToFile(projectPath);
             MODE = 3;
-            editor.setFile(file);
             return;
         }
 
@@ -1032,15 +1008,23 @@ Returns:
             button.setToggle(settings.getColorScheme());
             setColor(settings.getColorScheme());
         }
-        buttons[action] = button;
-        menu.setButtons(buttons);
+        if (action != 0)
+        {
+            buttons[action] = button;
+            menu.setButtons(buttons);
+        }
+
+        editor.setSettings(settings);
+        settings.saveToFile(projectPath);
+        editor.setFile(file);
+        updateDimensions();
+
         break;
     }
 
     case (81 & 0x1f):
         if (editor.getFile().unsavedFile())
         {
-            clear();
             status.resetStatus();
             status.setState("quit");
             editor.writeToScreen(status);
@@ -1086,7 +1070,7 @@ Returns:
     {
         if (editor.getState() == "ctrlshifts")
         {
-            clear();
+            // clear();
             status.setState("save as");
             editor.writeToScreen(status);
             MODE = 6;
@@ -1095,8 +1079,8 @@ Returns:
         else
         {
             editor.updateStatus(status);
-            status.update();
             editor.writeToScreen(status);
+            status.update();
         }
     }
     else
@@ -1107,9 +1091,9 @@ Returns:
         }
         else
         {
-            wrefresh(editor.linesPad);
-            wrefresh(editor.textPad);
-            wrefresh(status.statusWindow);
+            // wrefresh(editor.linesPad);
+            // wrefresh(editor.textPad);
+            // wrefresh(status.statusWindow);
         }
     }
 
@@ -1180,20 +1164,18 @@ Returns:
 
 {
     curs_set(0);
+    wresize(menu.menu, height - 10, width - 20);
     menu.displayButtons();
     menu.displayText(menu.getMenuText(editor));
-    prefresh(menu.menuPad, menu.getScroll(), 0, 0, 0, menu.getHeight() - 1, menu.getWidth() - 1);
-    int character = wgetch(menu.menuPad);
+    box(menu.menu, 0, 0);
+
+    int character = wgetch(menu.menu);
     settingsSpecialChars(character);
     if (MODE != 3)
-    {
         menu.resetPad();
-        if (MODE != 6 && MODE != 7)
-        {
-            werase(menu.menuPad);
-            wrefresh(menu.menuPad);
-        }
-    }
+
+    update_panels();
+    doupdate();
 }
 
 void App::switchFileMode()
@@ -1206,20 +1188,27 @@ Returns:
 
 {
     curs_set(0);
+
+    werase(menu.menu);
+    update_panels();
+    wresize(menu.menu, height - 10, menu.getLongestFile());
+    box(menu.menu, 0, 0);
+    update_panels();
+
     menu.displayButtons();
-    prefresh(menu.menuPad, menu.getScroll(), 0, 3, 0, menu.getHeight() - 4, menu.getWidth() - 1);
-    int character = wgetch(menu.menuPad);
+
+    prefresh(menu.filesPad,
+             menu.getScroll(), 0,
+             5 + 1, 10 + 1,
+             5 + (height - 10) - 2, 10 + menu.getLongestFile() - 2);
+
+    update_panels();
+    doupdate();
+
+    int character = wgetch(menu.menu);
     switchFileSpecialChars(character);
     if (MODE != 4)
-    {
         menu.resetPad();
-        if (MODE != 7)
-        {
-            menu.setCurrentDirectory(editor.getFile().getDirectory());
-            werase(menu.menuPad);
-            wrefresh(menu.menuPad);
-        }
-    }
 }
 
 void App::preferencesMode()
@@ -1232,20 +1221,19 @@ Returns:
 
 {
     curs_set(0);
+
+    wresize(menu.menu, height - 10, width - 20);
     menu.displayButtons();
     menu.displayText(menu.getPreferencesText(settings));
-    prefresh(menu.menuPad, menu.getScroll(), 0, 0, 0, menu.getHeight() - 1, menu.getWidth() - 1);
-    int character = wgetch(menu.menuPad);
+    box(menu.menu, 0, 0);
+
+    int character = wgetch(menu.menu);
     preferencesSpecialChars(character);
     if (MODE != 5)
-    {
         menu.resetPad();
-        if (MODE != 7)
-        {
-            werase(menu.menuPad);
-            wrefresh(menu.menuPad);
-        }
-    }
+
+    update_panels();
+    doupdate();
 }
 
 void App::stateLoop(string filename)
@@ -1269,9 +1257,7 @@ Returns:
     editor.setScanner(scanner);
     menu.setCurrentDirectory(editor.getFile().getDirectory());
 
-    editor.updateDimensions();
-    editor.updateStatus(status);
-    editor.writeToScreen(status);
+    updateDimensions();
 
     while (true)
     {
@@ -1293,16 +1279,12 @@ Returns:
             if (menu.getCurrentMenu() != 1)
             {
                 menu.setCurrentMenu(1);
-                menu.setFileButtons(editor.getFile().getDirectory());
+                menu.setFileButtons(editor.getFile().getDirectory(), editor.getFile().getName());
             }
             switchFileMode();
         }
         else if (MODE == 5)
         {
-            if (menu.getCurrentMenu() != 2)
-            {
-                menu.updateDimensions();
-            }
             menu.setCurrentMenu(2);
             preferencesMode();
         }

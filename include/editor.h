@@ -4,7 +4,7 @@
 #include <filesystem>
 #include <algorithm>
 #include <format>
-#include <curses.h>
+#include <ncurses.h>
 #include <vector>
 #include <math.h>
 #include "status.h"
@@ -44,7 +44,6 @@ private:
     int copiedLines;
     int pastedLines;
 
-    bool dragging;
     bool highlighting;
     bool cursorVisible;
     string lastSaved;
@@ -90,7 +89,7 @@ public:
     bool getCursorVisible();
     string getLastSaved();
 
-    void updateDimensions();
+    void updateDimensions(int width, int height);
 
     bool endOfLine();
     void addCharacter(char character);
@@ -125,9 +124,6 @@ public:
     void endHightlight();
     vector<pair<int, int>> orderHighlight();
     void deleteHighlighted();
-    void startDragging();
-    void endDragging();
-    void drag(int x, int y);
 
     int find(string text);
     void replaceAllInstances(string from, string to);
@@ -142,5 +138,5 @@ public:
     int getWrappedX(int x);
     int getWrappedY(int x);
     int getWrappedCursorY(int y, int x);
-    int getTabX(int x);
+    int getTabX(int currentLine, int x);
 };

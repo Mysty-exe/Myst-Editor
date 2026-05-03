@@ -52,7 +52,6 @@ Returns:
 	scroll = 0;
 	cursorVisible = true;
 
-	dragging = false;
 	highlighting = false;
 	selectedText = {};
 	selectedText.push_back(make_pair(0, 0));
@@ -87,7 +86,7 @@ Returns:
 	lineX = 0;
 	lineY = 0;
 	scroll = 0;
-	updateDimensions();
+	updateDimensions(width, height);
 	cursorVisible = true;
 
 	highlighting = false;
@@ -250,7 +249,7 @@ Returns:
 	tabSpaces = setTab();
 	file.setTabSize(tabSpaces);
 
-	lineX = 0;
+	lineX = (lineY > 0) ? file.getLineLength(lineY) : 0;
 	cursorX = getWrappedX(lineX);
 	cursorY = getWrappedCursorY(lineY, lineX);
 }
@@ -522,7 +521,7 @@ Returns:
 	return lastSaved;
 }
 
-void Editor::updateDimensions()
+void Editor::updateDimensions(int width, int height)
 /**
 Update size of editor and linenums if terminal size has been changed
 
@@ -531,9 +530,11 @@ Returns:
  */
 
 {
+	this->width = width;
+	this->height = height;
+
 	delwin(textPad);
 	delwin(linesPad);
-	getmaxyx(stdscr, height, width);
 	height -= 1;
 
 	lineNumbersWidth = to_string(file.getLines().size()).length() + 3;
@@ -620,12 +621,12 @@ Returns:
 					lineY = orderHighlight()[1].second;
 					cursorX = getWrappedX(lineX);
 					cursorY = getWrappedCursorY(lineY, lineX);
-					file.insertChar(lineY, getTabX(lineX), otherCharacters[i]);
+					file.insertChar(lineY, getTabX(lineY, lineX), otherCharacters[i]);
 					lineX = orderHighlight()[0].first;
 					lineY = orderHighlight()[0].second;
 					cursorX = getWrappedX(lineX);
 					cursorY = getWrappedCursorY(lineY, lineX);
-					file.insertChar(lineY, getTabX(lineX), specialCharacters[i]);
+					file.insertChar(lineY, getTabX(lineY, lineX), specialCharacters[i]);
 					lineY = orderHighlight()[1].second;
 					lineX = file.getLineLength(lineY) - 1;
 					cursorX = getWrappedX(lineX);
@@ -695,12 +696,12 @@ Returns:
 	if (!highlighting && checkSpecialChar(file.getLineWTabs(lineY)[lineX - 1]) && checkOtherChar(file.getLineWTabs(lineY)[lineX]) && checkSpecialChar(character) && autoComplete)
 	{
 		auto it = std::find(specialCharacters.begin(), specialCharacters.end(), character);
-		file.insertChar(lineY, getTabX(lineX), character);
-		file.insertChar(lineY, getTabX(lineX + 1), otherCharacters[it - specialCharacters.begin()]);
+		file.insertChar(lineY, getTabX(lineY, lineX), character);
+		file.insertChar(lineY, getTabX(lineY, lineX + 1), otherCharacters[it - specialCharacters.begin()]);
 	}
 	else if (!highlighting && (!checkOtherChar(character) || !autoComplete || !(file.getLineWTabs(lineY)[lineX] == character)))
 	{
-		file.insertChar(lineY, getTabX(lineX), character);
+		file.insertChar(lineY, getTabX(lineY, lineX), character);
 	}
 
 	lineX++;
@@ -729,12 +730,12 @@ Returns:
 					lineY = orderHighlight()[1].second;
 					cursorX = getWrappedX(lineX);
 					cursorY = getWrappedCursorY(lineY, lineX);
-					file.insertChar(lineY, getTabX(lineX), otherCharacters[i]);
+					file.insertChar(lineY, getTabX(lineY, lineX), otherCharacters[i]);
 					lineX = orderHighlight()[0].first;
 					lineY = orderHighlight()[0].second;
 					cursorX = getWrappedX(lineX);
 					cursorY = getWrappedCursorY(lineY, lineX);
-					file.insertChar(lineY, getTabX(lineX), specialCharacters[i]);
+					file.insertChar(lineY, getTabX(lineY, lineX), specialCharacters[i]);
 					lineY = orderHighlight()[1].second;
 					if (selectedText[0].second == selectedText[1].second)
 					{
@@ -805,11 +806,11 @@ Returns:
 	if (cursorX > 0)
 	{
 		int sub = 1;
-		if (file.getLine(lineY)[getTabX(lineX) - 1] == '\t')
+		if (file.getLine(lineY)[getTabX(lineY, lineX) - 1] == '\t')
 		{
 			sub = tabSize;
 		}
-		file.delChar(lineY, getTabX(lineX) - 1);
+		file.delChar(lineY, getTabX(lineY, lineX) - 1);
 
 		lineX -= sub;
 		cursorX = getWrappedX(lineX);
@@ -922,7 +923,7 @@ Returns:
 		}
 		else
 		{
-			file.insertChar(lineY, getTabX(lineX), '\t');
+			file.insertChar(lineY, getTabX(lineY, lineX), '\t');
 			lineX += tabSize;
 			if (cursorX + tabSize < width - 1) // Check if cursor is at the end of a line
 			{
@@ -980,8 +981,8 @@ Returns:
 	string text;
 	if (((file.getLineWTabs(lineY)[lineX - 1] == '[' && file.getLineWTabs(lineY)[lineX] == ']') || (file.getLineWTabs(lineY)[lineX - 1] == '{' && file.getLineWTabs(lineY)[lineX] == '}') || (file.getLineWTabs(lineY)[lineX - 1] == '(' && file.getLineWTabs(lineY)[lineX] == ')')) && autoComplete)
 	{
-		text = file.getLine(lineY).substr(getTabX(lineX), file.getLineLength(lineY));
-		file.setLine(lineY, file.getLine(lineY).substr(0, getTabX(lineX)));
+		text = file.getLine(lineY).substr(getTabX(lineY, lineX), file.getLineLength(lineY));
+		file.setLine(lineY, file.getLine(lineY).substr(0, getTabX(lineY, lineX)));
 		file.insertLine(lineY + 1, "");
 		file.insertLine(lineY + 2, "");
 		lineX = 0;
@@ -1008,8 +1009,8 @@ Returns:
 	}
 	else
 	{
-		text = file.getLine(lineY).substr(getTabX(lineX), file.getLineLength(lineY));
-		file.setLine(lineY, file.getLine(lineY).substr(0, getTabX(lineX)));
+		text = file.getLine(lineY).substr(getTabX(lineY, lineX), file.getLineLength(lineY));
+		file.setLine(lineY, file.getLine(lineY).substr(0, getTabX(lineY, lineX)));
 		file.insertLine(lineY + 1, "");
 		cursorX = 0;
 		cursorY++;
@@ -1535,7 +1536,7 @@ Returns:
 	{
 		int sub = 1;
 
-		if (file.getLine(lineY)[getTabX(lineX) - 1] == '\t')
+		if (file.getLine(lineY)[getTabX(lineY, lineX) - 1] == '\t')
 		{
 			sub = tabSize;
 		}
@@ -1546,7 +1547,7 @@ Returns:
 	{
 		if (lineY != 0)
 		{
-			lineX = file.getLine(lineY - 1).length();
+			lineX = file.getLineWTabs(lineY - 1).length();
 			lineY--;
 		}
 	}
@@ -1568,7 +1569,7 @@ Returns:
 	{
 		int add = 1;
 
-		if (file.getLine(lineY)[getTabX(lineX)] == '\t')
+		if (file.getLine(lineY)[getTabX(lineY, lineX)] == '\t')
 		{
 			add = tabSize;
 		}
@@ -1643,7 +1644,6 @@ Returns:
  */
 
 {
-	endDragging();
 	selectedText[0].first = 0;
 	selectedText[0].second = 0;
 	selectedText[1].first = 0;
@@ -1694,35 +1694,25 @@ Returns:
 		cursorX = getWrappedX(lineX);
 		cursorY = getWrappedCursorY(lineY, lineX);
 
-		for (int i = orderHighlight()[1].first - 1; i >= 0; i--)
+		int start = getTabX(orderHighlight()[1].second, orderHighlight()[1].first);
+		for (int i = start; i >= 0; i--)
 			file.delChar(orderHighlight()[1].second, i);
 
 		for (int i = orderHighlight()[1].second - 1; i > orderHighlight()[0].second; i--)
 			file.delLine(i);
 
-		for (int i = file.getLineLength(orderHighlight()[0].second); i >= orderHighlight()[0].first; i--)
+		for (int i = file.getLine(orderHighlight()[0].second).size(); i >= getTabX(lineY, orderHighlight()[0].first); i--)
 			file.delChar(orderHighlight()[0].second, i);
 
-		file.addStr(orderHighlight()[0].second, file.getLine(orderHighlight()[0].second + 1));
-		file.delLine(orderHighlight()[0].second + 1);
+		if (file.getLines().size() > 1)
+		{
+			file.addStr(orderHighlight()[0].second, file.getLine(orderHighlight()[0].second + 1));
+			file.delLine(orderHighlight()[0].second + 1);
+		}
 
 		stack.updateStack(file.getLines(), lineX, lineY);
 		state = "";
 	}
-}
-
-void Editor::startDragging()
-{
-	dragging = true;
-}
-
-void Editor::endDragging()
-{
-	dragging = false;
-}
-
-void Editor::drag(int x, int y)
-{
 }
 
 int Editor::find(string text)
@@ -2164,7 +2154,7 @@ Returns:
 		{
 			maxHeight += 1000;
 		}
-		updateDimensions();
+		updateDimensions(width, height);
 	}
 
 	int lineNum = 0;
@@ -2375,7 +2365,7 @@ Returns:
 	return result - 1;
 }
 
-int Editor::getTabX(int x)
+int Editor::getTabX(int currentLine, int x)
 /**
 Gets the cursorX value based on the amount of tabs in the line
 
@@ -2387,10 +2377,10 @@ Returns:
  */
 
 {
-	string copiedLine = file.replaceAll(file.getLine(lineY), "\t", tabSpaces);
+	string copiedLine = file.replaceAll(file.getLine(currentLine), "\t", tabSpaces);
 	copiedLine = copiedLine.substr(0, x);
 
-	vector<int> tabs = file.getTabs(lineY, tabSize);
+	vector<int> tabs = file.getTabs(currentLine, tabSize);
 	for (int x = (int)tabs.size() - 1; x != -1; x--)
 	{
 		if (tabs[x] - tabSize < (int)copiedLine.length())

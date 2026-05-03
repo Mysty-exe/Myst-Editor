@@ -1,5 +1,6 @@
 #pragma once
 #include <ncurses.h>
+#include <panel.h>
 #include <iostream>
 #include <stdio.h>
 #include "editor.h"
@@ -28,6 +29,7 @@ class App
 private:
     int MODE;
     int width, height;
+    WINDOW *win;
     string projectPath;
 
     Settings settings;
@@ -39,6 +41,7 @@ public:
     App(int w, int h, string path);
 
     void init();
+    void updateDimensions();
     int getMode();
     void setMode(int arg);
     Settings getSettings();

@@ -1,6 +1,7 @@
 #pragma once
 #include <iostream>
-#include <curses.h>
+#include <ncurses.h>
+#include <panel.h>
 #include <editor.h>
 #include <vector>
 #include <string>
@@ -14,15 +15,16 @@ class Menu
 {
 private:
     int currentMenu;
-    int width, height, scroll;
+    int width, height, scroll, longestFile, numFiles;
     string currentDirectory, fact;
     vector<Button> settingsButtons, switchButtons, preferencesButtons;
     ButtonsList settingsList, switchList, preferencesList;
 
 public:
-    WINDOW *menuPad;
+    WINDOW *menu, *files, *filesPad;
+    PANEL *menuPanel, *filesPanel;
     Menu();
-    Menu(int w, int h, Settings &settings, string projectPath);
+    Menu(int w, int h, Settings &settings);
     int getCurrentMenu();
     void setCurrentMenu(int current);
     int getWidth();
@@ -33,10 +35,10 @@ public:
     void setScroll(int s);
     string getCurrentDirectory();
     void setCurrentDirectory(string dir);
-    void updateDimensions();
+    void updateDimensions(int width, int height);
     vector<Button> getButtons();
     void setButtons(vector<Button> buttons);
-    void setFileButtons(string directory);
+    void setFileButtons(string directory, string currentFile = "");
     void displayButtons();
     vector<string> getMenuText(Editor &editor);
     vector<string> getPreferencesText(Settings &settings);
@@ -46,4 +48,5 @@ public:
     int enter(File &file);
     void back();
     void resetPad();
+    int getLongestFile() { return longestFile; };
 };

@@ -227,7 +227,6 @@ Returns:
  */
 
 {
-    std::cout << "DSKLJDF" << std::endl;
     string f = projectPath + "/config/settings.ini";
     fstream file(f, ios::out | ios::trunc);
     file << "[editor]\n";

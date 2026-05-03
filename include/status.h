@@ -39,8 +39,8 @@ public:
     string getFilename();
     void setFilename(string filename);
     string getConfirm();
-    
-    void updateDimensions();
+
+    void updateDimensions(int width, int height);
     bool endOfLine();
     void addCharacter(char character);
     void insertCharacter(char character);
@@ -53,7 +53,7 @@ public:
     void getDate();
     void displayDate();
     void setInfo(string text, bool err);
-    void update();
+    void update(bool forceUpdate = false);
     void findAndReplace();
     void resetStatus();
     void saveAs();
