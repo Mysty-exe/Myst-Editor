@@ -80,28 +80,28 @@ It also includes a terminal-style output panel for running system commands insid
 
 - C++17 compatible compiler
 - ncurses
-- make
 - xclip
+- make
 
 ## Build
 
 Clone the repository:
-
-git clone [https://github.com/Mysty-exe/Myst.git](https://github.com/Mysty-exe/Myst.git)
-cd Myst
-
-Build and run:
-
+```
+git clone https://github.com/Mysty-exe/Myst-Editor.git
+cd Myst-Editor
+```
+Build:
+```
 make
-
+```
 ## Run
-
+```
 ./build/myst
-
+```
 Open a file:
-
+```
 ./build/myst filename.txt
-
+```
 ## Controls
 
 General
@@ -111,7 +111,7 @@ General
 - Ctrl E: open menu
 - Ctrl T: see files in directory
 - Ctrl P: preferences
-- Ctrl R: command line
+- Ctrl R: command line/terminal
 
 Navigation
 
@@ -121,7 +121,7 @@ Navigation
 Editing
 
 - Ctrl F: find and replace
-- Ctrl /: comment out lines
+- Ctrl /: comment out lines (only in python and c/c++ files)
 
 Command System
 
@@ -130,20 +130,19 @@ Command System
 - Scroll through output history stack
 
 ## Project Structure
-
-src/ core editor logic
-include/ headers
-config/ user settings
-resources/ themes and assets
-build/ generated files
-
+```
+src/        core editor logic
+include/    headers
+config/     user settings
+resources/  themes and assets
+build/      generated files
+```
 ## Future Work
 
 - Support for more programming languages
 - Improved syntax parsing system
-- Plugin system for extensions
 - Persistent integrated terminal
-- Improved mouse driven UI interactions
+- Improved mouse UI interactions
 
 ## Notes
 
